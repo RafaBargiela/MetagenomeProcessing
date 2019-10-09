@@ -9,7 +9,12 @@ A pipeline for assembly, annotation and taxonomic classification of metagenomes 
 - Taxonomic classification
 
 ## Initial files
+Basically, we will start from the final reads files resulting from the sequencing process. We will assume that we have two files for each metagenome from a __paired__ analysis:
+- R1.fastq.gz
+- R2.fastq.gz
 
 ## Dependencies
+- FastQC
 
 ## Step 1: Quality control and trimming
+For quality control we are going to use the FastQC toolkit. This is not essential for the rest of the pipeline but could give additional information about the quality of the sequencin process and the length of the reads. This could be helpful in order to choose the parameters to make the trimming. 
