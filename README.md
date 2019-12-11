@@ -43,6 +43,10 @@ Assembly is one of the most important parts porcessing metagenomic reads. All th
 
 - Martin Ayling, Matthew D Clark, Richard M Leggett. _New approaches for metagenome assembly with short reads_. Briefings in Bioinformatics, , bbz020, https://doi.org/10.1093/bib/bbz020
 
-In our case, we have choose MEGAHIT as assembler.
+In our case, we have choose MEGAHIT as assembler. Here we start where we left on the step before, after using cutadapt, using the resulting trimmed files:
+
+- R1.trimmed.fastq.gz
+- R2.trimmed.fastq.gz
+
 
 
