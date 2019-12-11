@@ -33,12 +33,10 @@ Inside the $OUT_DIR directory you will find an .html file which will open on the
 cutadapt -q 20,20 -m 20 -a AGTCAA -A AGTCAA -o R1.trimmed.fastq.gz -p R2.trimmed.fastq.gz R1.fastq.gz R2.fastq.gz > $report
 ```
 Report produced by the program will be saved on $report file. If you want, you could run _FastQC_ again over the trimmed files to check the differences:
-```
-23
-fastqc -o $OUT_DIR R1.trimmed.fastq.gz -p R2.trimmed.fastq.gz
-24
-```
 
+```
+fastqc -o $OUT_DIR R1.trimmed.fastq.gz -p R2.trimmed.fastq.gz
+```
 
 ## Step 2: Assembling the reads using MEGAHIT
 Assembly is one of the most important parts porcessing metagenomic reads. All the gene annotation and prediction will depend of the accuarcy of this step. There are many assemblers for metagenomes, each with different advantages but there is not a clear evidence showing any to be better than the others. For further information, I would recommend the read of the following paper about the current state of art on metagenome assembly:
