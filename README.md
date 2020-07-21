@@ -5,7 +5,7 @@ A pipeline for assembly, annotation and taxonomic classification of metagenomes 
 - Quality control have using _fastqc_ and adapter trimming using _cutadapt_.
 - Assembling the reads using MEGAHIT.
 - Gene prediction and annotation with PROKKA.
-- Additional functional annotation was added using emapper and DIAMOND with the eggNOG database.
+- Additional functional annotation using DIAMOND with the eggNOG database.
 - Taxonomic classification of metagenomic reads.
 
 ## Initial files
@@ -61,6 +61,23 @@ Once assembly is complete we need to get the coding genes and make a first funct
 prokka final.contigs.fa --outdir OUT_DIR --norrna --notrna --metagenome --addgenes --cpus Nr_of_cores
 ```
 Again, you can accelerate the calculation adding CPU cores with the option _--cpus_. Additional options _--norna_ and _--notrna_ avoid the prediction of rRNA and tRNA genes, _--metagenome_ improve the prediction for highly fragmented genomes and _--addgenes_ is just to add gene name in the final output. Among all output files produced by _Prokka_ the most interesting are the _.tsv_ file, which is a table describing each coding region with the gene name, EC number and product description, and the fasta files with the aminoacid sequences from the predicted genes (_.faa_).
+
+## Additional functional annotation using DIAMOND with the eggNOG database
+Since _Prokka_ annotation could result a bit insufficient we complement the functional annotation using the eggNOG database, which combines the functional information of different databases (COG, arCOG, Pfam,...). Program eggNOG-mapper can do the task directly, but it doesn't allow the option to add more cores to accelerate the computation. Therefore, we combine the use of _DIAMOND_ with the eggNOG diamond database created on the installation of eggNOG-mapper to make the process quicker.
+
+So, first step then is to launch diamond, for what we need to have located the aminoacids fasta file created by _Prokka_ and the eggNOG diamond database created on eggNOG-mapper installation (usually: _eggnog-mapper/data/eggnog_proteins.dmnd_).
+```
+diamond blastp -d eggnog_proteins.dmnd -q PROKKA_xxxx.faa --threads Nr_of_cores --out diamond_output_file --outfmt 6 -t /tmp --max-target-seqs 1
+```
+Here there are some options to take into account. First, _-threads_ is to set the number of CPU cores to perform the calculation. _-out_ sets the output name file, which we will call from now on _diamond.hits.txt_. _--outfmt_ and _--max-target-seqs_ are _blastp_ options to set the output format (6 corresponds to tabular format) and the number of matching hits in the output (here we set 1 to get just the best hit). Finally, _-t_ is to set a directory for temporal files.
+
+Next step is to use _eggMapper_ using the _DIAMOND_ output on _diamond.hits.txt_, but first we need to transform this output into a file suitable to use by _eggMapper_. To this end we developed a small script in Perl, _Diamond2eggMapper.pl_:
+```
+Diamond2eggMapper.pl diamond.hits.txt > eggMapper_input_file
+```
+
+
+
 
 
 
