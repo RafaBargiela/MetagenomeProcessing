@@ -88,6 +88,7 @@ Look that here we use the tabular output from PROKKA _.tsv_.
 ## Step 5: Taxonomic classification of metagenomic reads
 There are some different programs to classify into a lineage raw reads or assembled contigs produced by metagenomics sequencing. Some of then are based on searching marking genes into the dataset and classify then according to a database, like the case of GrafM (http://geronimp.github.io/graftM). However, most of the programs are based on _k-mers_, splitting the target sequences into smaller fragments of _k_ length and then process these _k-mers_ according to their different algorithms. For instance, _Kaiju_ (https://github.com/bioinformatics-centre/kaiju) is based on Maximium Exact Matching (MEM), where target sequences are split on small _k-mers_ and match directly against the sequences from reference database, assigning the taxonomy of the hit where the target fragment got higher numer of exact matches. However, currently one of the most cited programs for classification of metagenomic reads are _Kraken_(http://ccb.jhu.edu/software/kraken/) and its new version _Kraken2_(https://ccb.jhu.edu/software/kraken2/), which we will use here. It uses _k-mers_-based algorithm, mapping every target sequence _k-mers_ over the taxonomic tree of all the genomes of the reference database, assigning a taxonomic label according to the Lowest Common Ancestor (LCA) containing that _k-mer_.
 
+### 5.1: Classification using Kraken2
 In order to run Kraken2 you first need to create a reference database against which we will match our sequences. In our case, we will create the database based on the NCBI RefSeq of Bacteria and Archaea. First, we need to download both taxonomies in a common database folder:
 ```
 kraken2-build --download-library bacteria --db OurDatabaseName
@@ -102,6 +103,25 @@ Now we are ready to fun _Kraken2_ against our RefSeq database. For a straigh use
 kraken2 --threads Nr_of_cores --db OurDatabaseName --output OutputName --report Output2Name --use-names Fasta_Input_file
 ```
 Option _--use-names_ add the scientific names of the assigned taxons to the final output, while _--report_ offers a tab delimited output alternative to the starndard output assigned on _--output_. Regard that final argument is the input file in fasta format, which could be the raw reads or assembled contigs.
+
+### 5.2: Improving classification by binning reads with MaxBin
+When using marking genes based algorithms (GraftM,...) only reads matching those marking genes (i.e., 16S rRNA genes) are classified, but _k-mers_-based algorithms try to classified the 100% of the resulting reads from sequencing (Kraken2, ...). In this case, sometimes straight classification of reads can return a high number of reads that were not assigned to any taxonomy. If the percentage of classified sequences is not higher than 70%, then you could try extra strategies which could help you to rise up the number of classified sequences. 
+
+One of this strategies could be binning assembled contigs and raw reads in order to get bins  that we use after for classification instead the raw reads. This strategy tries to recover individual genomes, what could make easier the classification. We can do this using MaxBin. This program clusters reads and assembled contigs into bins, each in theory consisting into contigs from one species.
+
+To run MaxBin we will need the Initiall _R*.fastq.gz_ files for reads and the file with assembled contigs by MegaHit,  _final.contigs.fa_. 
+```
+run_MaxBin.pl -contig final.contigs.fa -out OutputDirectory -reads R1.fastq.gz -reads2 R2.fastq.gz -thread Nr_of_cores
+```
+Each resulting bin will be in a fasta file on the Output directory. We can concatenate all bins in a single fasta file:
+```
+cat OutputDirectory/*.fasta > All.bins.fasta
+```
+Now we can use this single file to run again _Kraken2_ and check if we get a better classification ration:
+
+```
+kraken2 --threads Nr_of_cores --db OurDatabaseName --output OutputName --report Output2Name --use-names All.bins.fasta
+```
 
 
 
