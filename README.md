@@ -118,7 +118,7 @@ Each resulting bin will be in a fasta file on the Output directory. We can conca
 ```
 cat OutputDirectory/*.fasta > All.bins.fasta
 ```
-Now we can use this single file to run again _Kraken2_ and check if we get a better classification ration:
+Now we can use this single file to run again _Kraken2_ and check if we get a better classification ratio:
 
 ```
 kraken2 --threads Nr_of_cores --db OurDatabaseName --output OutputName --report Output2Name --use-names All.bins.fasta
