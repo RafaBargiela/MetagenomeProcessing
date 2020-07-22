@@ -1,5 +1,5 @@
-# Processing Metagenomic sequencing reads
-A pipeline for assembly, annotation and taxonomic classification of metagenomes after sequencing.
+# Processing Metagenomic Sequencing Reads
+A pipeline for assembly, annotation and taxonomic classification of metagenomic reads after sequencing process.
 
 ## Index
 - Quality control have using _fastqc_ and adapter trimming using _cutadapt_.
