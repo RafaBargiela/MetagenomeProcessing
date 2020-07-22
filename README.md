@@ -19,8 +19,9 @@ Basically, we will start from the final reads files resulting from the sequencin
 - MEGAHIT v1.1.3
 - PROKKA v1.14.5
 - DIAMOND v0.9.22.123
-- eggNOG-mapper v2 and eggNOG database 5.0
+- eggNOG-mapper v2 and eggNOG database v5.0
 - KRAKEN2 v2.0.8
+- MaxBin v2.2.6
 
 ## Step 1: Quality control and trimming
 For quality control we are going to use the _FastQC_ toolkit. This is not essential for the rest of the pipeline but could give additional information about the quality of the sequencing process and the length of the reads. This could be helpful in order to choose the parameters to make the trimming. 
