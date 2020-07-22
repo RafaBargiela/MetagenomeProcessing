@@ -55,17 +55,17 @@ megahit -1  R1.trimmed.fastq.gz -2 R2.trimmed.fastq.gz -o OUT_DIR -t Nr_of_cores
 ```
 Use _-t_ option only if you want to use more than one CPU cores to accelerate calculation. _--k_ option sets up the list of k-mers size, where is recommended to use odd numbers in the range 15-255 with increment <=28. Contigs of final assembly are storage in OUT_DIR on file _final.contigs.fa_.
 
-## Gene prediction and annotation with PROKKA
+## Step 3: Gene prediction and annotation with PROKKA
 Once assembly is complete we need to get the coding genes and make a first functional annotation. To do this we will use PROKKA with the results contigs file,  _final.contigs.fa_, from the previus step: 
 ```
 prokka final.contigs.fa --outdir OUT_DIR --norrna --notrna --metagenome --addgenes --cpus Nr_of_cores
 ```
 Again, you can accelerate the calculation adding CPU cores with the option _--cpus_. Additional options _--norna_ and _--notrna_ avoid the prediction of rRNA and tRNA genes, _--metagenome_ improve the prediction for highly fragmented genomes and _--addgenes_ is just to add gene name in the final output. Among all output files produced by _Prokka_ the most interesting are the _.tsv_ file, which is a table describing each coding region with the gene name, EC number and product description, and the fasta files with the aminoacid sequences from the predicted genes (_.faa_).
 
-## Additional functional annotation using DIAMOND with the eggNOG database
-Since _Prokka_ annotation could result a bit insufficient we complement the functional annotation using the eggNOG database, which combines the functional information of different databases (COG, arCOG, Pfam,...). Program eggNOG-mapper can do the task directly, but it doesn't allow the option to add more cores to accelerate the computation. Therefore, we combine the use of _DIAMOND_ with the eggNOG diamond database created on the installation of eggNOG-mapper to make the process quicker.
+## Step 4: Additional functional annotation using DIAMOND with the eggNOG database
+Since _Prokka_ annotation could result a bit insufficient we complement the functional annotation using the eggNOG database, which combines the functional information of different databases (COG, arCOG, Pfam,...). _eggNOG-mapper_ can do the task directly, but if we split the search by using _DIAMOND_ we accelerate the process since _DIAMOND_ is much faster. Therefore, we combine the use of _DIAMOND_ with the eggNOG diamond database, created during the installation of _eggNOG-mapper_, to make an annotation of our genes based on the eggNOG database.
 
-So, first step then is to launch diamond, for what we need to have located the aminoacids fasta file created by _Prokka_ and the eggNOG diamond database created on eggNOG-mapper installation (usually: _eggnog-mapper/data/eggnog_proteins.dmnd_).
+So, first step then is to launch diamond, for what we need to have located the aminoacids fasta file created by _Prokka_ and the eggNOG diamond database created on _eggNOG-mapper_ installation (usually: _eggnog-mapper/data/eggnog_proteins.dmnd_).
 ```
 diamond blastp -d eggnog_proteins.dmnd -q PROKKA_xxxx.faa --threads Nr_of_cores --out diamond_output_file --outfmt 6 -t /tmp --max-target-seqs 1
 ```
@@ -75,9 +75,33 @@ Next step is to use _eggMapper_ using the _DIAMOND_ output on _diamond.hits.txt_
 ```
 Diamond2eggMapper.pl diamond.hits.txt > eggMapper_input_file
 ```
+In the first step using _DIAMOND_ we matched the our target genes with its closest target on eggNOG, getting the hits IDs. Then, the resulting output is adapted in order use it by _eggMapper_ and the final step is to run _eggMapper_ to add the full annotation and description corresponding to each of these hits, using the option _annotate_hits_table_:
+```
+emapper.py --annotate_hits_table eggMapper_input_file -o eggMapper_output_file
+```
+Finally, we can combine _PROKKA_ annotations with the additional annotations we just created using the following script:
+```
+CombinePROKKAeggMapper.pl PROKKA_xxxx.tsv eggMapper_output_file > Final_annotation_file
+```
+Look that here we use the tabular output from PROKKA _.tsv_.
 
+## Step 5: Taxonomic classification of metagenomic reads
+There are some different programs to classify into a lineage raw reads or assembled contigs produced by metagenomics sequencing. Some of then are based on searching marking genes into the dataset and classify then according to a database, like the case of GrafM (http://geronimp.github.io/graftM). However, most of the programs are based on _k-mers_, splitting the target sequences into smaller fragments of _k_ length and then process these _k-mers_ according to their different algorithms. For instance, _Kaiju_ (https://github.com/bioinformatics-centre/kaiju) is based on Maximium Exact Matching (MEM), where target sequences are split on small _k-mers_ and match directly against the sequences from reference database, assigning the taxonomy of the hit where the target fragment got higher numer of exact matches. However, currently one of the most cited programs for classification of metagenomic reads are _Kraken_(http://ccb.jhu.edu/software/kraken/) and its new version _Kraken2_(https://ccb.jhu.edu/software/kraken2/), which we will use here. It uses _k-mers_-based algorithm, mapping every target sequence _k-mers_ over the taxonomic tree of all the genomes of the reference database, assigning a taxonomic label according to the Lowest Common Ancestor (LCA) containing that _k-mer_.
 
-
+In order to run Kraken2 you first need to create a reference database against which we will match our sequences. In our case, we will create the database based on the NCBI RefSeq of Bacteria and Archaea. First, we need to download both taxonomies in a common database folder:
+```
+kraken2-build --download-library bacteria --db OurDatabaseName
+kraken2-build --download-library archaea --db OurDatabaseName
+```
+For additional information, we could add custom sequences to our database using the _--add-to-library_ command, using a fasta format file. Once the library is created have to build the database:
+```
+ kraken2-build --build --db OurDatabaseName --threads Nr_of_cores
+```
+Now we are ready to fun _Kraken2_ against our RefSeq database. For a straigh use of the _Kraken2_ use the following command line:
+```
+kraken2 --threads Nr_of_cores --db OurDatabaseName --output OutputName --report Output2Name --use-names Fasta_Input_file
+```
+Option _--use-names_ add the scientific names of the assigned taxons to the final output, while _--report_ offers a tab delimited output alternative to the starndard output assigned on _--output_. Regard that final argument is the input file in fasta format, which could be the raw reads or assembled contigs.
 
 
 
